@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notes</title>
+    <style>
+        body {
+            text-align: center
+        }
+        textarea {
+            width:90%;
+            height:50vh
+        }
+        header {
+            width:100vw;
+        }
+        #autoSave {
+            appearance: none;
+            background-color: #dfe1e4;
+            border-radius: 72px;
+            border-style: none;
+            flex-shrink: 0;
+            height: 20px;
+            margin: 0;
+            position: relative;
+            width: 30px;
+        }
+
+        #autoSave:before {
+            bottom: -6px;
+            content: "";
+            left: -6px;
+            position: absolute;
+            right: -6px;
+            top: -6px;
+        }
+
+        #autoSave,
+        #autoSave::after {
+            transition: all 100ms ease-out;
+        }
+
+        #autoSave::after {
+            background-color: #fff;
+            border-radius: 50%;
+            content: "";
+            height: 14px;
+            left: 3px;
+            position: absolute;
+            top: 3px;
+            width: 14px;
+        }
+
+        #autoSave input[type=checkbox] {
+            cursor: default;
+        }
+
+        #autoSave:hover {
+            background-color: #c9cbcd;
+            transition-duration: 0s;
+        }
+
+        #autoSave:checked {
+            background-color: #6e79d6;
+        }
+
+        #autoSave:checked::after {
+            background-color: #fff;
+            left: 13px;
+        }
+
+        #autoSave :focus:not(.focus-visible) {
+            outline: 0;
+        }
+
+        #autoSave .ikxBAC:checked:hover {
+            background-color: #535db3;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <p id="stats"></p>
+        <p id="date"></p>
+    </header>
+    <main>
+        <textarea placeholder="Write stuff here!" id="txt"></textarea>
+        <div>
+            <button id="save">Save</button>
+            <button id="reset">Clear</button>
+            <button id="file">Save To File</button>
+            <button id="copy">Copy</button>
+            <br>
+            <input type="checkbox" id="autoSave"><label>Auto Save</label>
+        </div>
+    </main>
+</body>
+    <script>
+        const q = (a) => document.getElementById(a)
+        const stats = q("stats")
+        const dateLabel = q('date')
+        const save = q('save')
+        const t = q("txt")
+        const reset = q('reset')
+        const format = (str,a) => a == 1? str : str+'s'
+        const autoSaveEl = q('autoSave')
+        window.onbeforeunload = (e) => {
+            if(t.value != localStorage.getItem('data')) e.preventDefault()
+        }
+        let autoSave = localStorage.getItem('autoSave') == 'true' || true
+        autoSaveEl.checked = autoSave
+        autoSaveEl.oninput = () => {
+            const value = autoSaveEl.checked
+            autoSave = value
+            localStorage.setItem('autoSave',value)
+        }
+        reset.onclick = () => {
+            if(confirm('Are you sure, all progress will be lost and there will be no way to recover any lost data.')) {
+                t.value = ''
+                update()
+                localStorage.clear()
+            }
+        }
+        t.value = localStorage.getItem('data')
+        q('copy').onclick = () => {
+            navigator.clipboard.writeText(t.value)
+        }
+        q('file').onclick = () => {
+            const val = t.value
+            const blob = new Blob([val], {"type":"text/html"})
+            const url = URL.createObjectURL(blob)
+            const a = document.createElement('a')
+            a.href = url
+            a.download = 'save.txt'
+            a.click()
+            document.removeChild(a)
+        }
+        dateLabel.innerText = `Last Updated: ${localStorage.getItem('lastUpdated')?? 'Never'}`
+        save.onclick = update
+        function update(upDATE = true, upSTATS = true, upTXT = true) {
+            if(upDATE) {
+                const date = new Date().toLocaleString()
+                dateLabel.innerText = `Last Updated: ${date}`
+                localStorage.setItem('lastUpdated',date)
+            }
+            if(upSTATS) {
+                const txt = t.value.trim()
+                const words = txt.split(' ').length
+                const lines = txt.split('\n').length
+                //const len = txt.replaceAll('\n','').replaceAll(' ','').length
+                stats.innerText = `${txt.length} ${format('Character',txt.length)} ${words} ${format('Word',words)} ${lines} ${format('Line', lines)}`
+                if(upTXT) localStorage.setItem('data',txt)
+            }
+        }
+        t.oninput = () => update(autoSave,true,autoSave)
+        update(false,true,false)
+    </script>
+</html>
