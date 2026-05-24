@@ -108,7 +108,7 @@
         window.onbeforeunload = (e) => {
             if(t.value != localStorage.getItem('data')) e.preventDefault()
         }
-        let autoSave = localStorage.getItem('autoSave') == 'true' || true
+        let autoSave = localStorage.getItem('autoSave') == 'true' ?? true
         autoSaveEl.checked = autoSave
         autoSaveEl.oninput = () => {
             const value = autoSaveEl.checked
